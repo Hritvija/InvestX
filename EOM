@@ -1,0 +1,26 @@
+#creating a function to calculate EOM
+def calculate_ease_of_movement(df, period=14):
+    # Midpoint Move = Daily High + Low/2 .. will be useful in calculating distance moved
+    df['midp_move'] = (df['High'] + df['Low']) / 2
+
+    # Distance moved is the difference of midpoint move of current date and the previous day
+    df['dist_moved'] = df['midp_move'].diff(periods =1)
+
+    # Box Ratio
+    df['box_ratio'] = (df['Volume'] / 1000000) / (df['High'] - df['Low'])
+
+    # The Ease of Movement indicator
+    df['ease_of_movement'] = df['dist_moved'] / df['box_ratio']
+
+    # The 14-day exponential moving average of the Ease of Movement indicator
+    df['eom_average'] = df['ease_of_movement'].ewm(span=period, min_periods=period - 1).mean()
+
+    return df
+  #importing the OHLC values for Microsoft
+index = 'MSFT'  
+data = yf.download(index, start='2021-05-23', end='2023-05-23') 
+
+# Calculate Ease of Movement indicator
+calculate_ease_of_movement_data = calculate_ease_of_movement(data)
+
+print(calculate_ease_of_movement_data[['ease_of_movement', 'eom_average']])
