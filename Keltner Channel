@@ -1,0 +1,23 @@
+import pandas as pd
+import yfinance as yf
+def calculate_keltner_channels(df, period, multiplier):
+    # The typical price
+    df['typ_price'] = (df['High'] + df['Low'] + df['Close']) / 3
+
+    # The exponential moving average of the typical price
+    df['ema_typ_price'] = df['typ_price'].ewm(span=period, min_periods=period - 1).mean()
+
+    # The average true range (ATR)
+    df['true_range'] = df['High'].rolling(window=2).max() - df['Low'].rolling(window=2).min()
+    df['atr'] = df['true_range'].rolling(window=period).mean()
+
+    # The upper and lower Keltner Channels
+    df['up_band'] = df['ema_typical_price'] + (multiplier * df['atr'])
+    df['low_band'] = df['ema_typical_price'] - (multiplier * df['atr'])
+
+    return df
+
+index = 'MSFT'  
+data = yf.download(index, start='2021-05-23', end='2023-05-23') 
+keltner_channels = calculate_keltner_channels(data,20,2)
+print(keltner_channels[['up_band', 'low_band']])
